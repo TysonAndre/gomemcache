@@ -549,23 +549,53 @@ func (c *Client) populateOne(rw *bufio.ReadWriter, verb string, item *Item) erro
 		return ErrMalformedKey
 	}
 	var err error
+	w := rw.Writer
+	// fmt.Fprintf(rw, "%s %s %d %d %d %d\r\n", verb, item.Key, item.Flags, item.Expiration, len(item.Value), item.casid)
+	if _, err := w.WriteString(verb); err != nil {
+		return err
+	}
+	if err := w.WriteByte(byte(' ')); err != nil {
+		return err
+	}
+	if _, err := w.WriteString(item.Key); err != nil {
+		return err
+	}
+	if err := w.WriteByte(byte(' ')); err != nil {
+		return err
+	}
+	if _, err := w.WriteString(strconv.FormatUint(uint64(item.Flags), 10)); err != nil {
+		return err
+	}
+	if err := w.WriteByte(byte(' ')); err != nil {
+		return err
+	}
+	if _, err := w.WriteString(strconv.Itoa(int(item.Expiration))); err != nil {
+		return err
+	}
+	if err := w.WriteByte(byte(' ')); err != nil {
+		return err
+	}
+	if _, err := w.WriteString(strconv.FormatUint(uint64(len(item.Value)), 10)); err != nil {
+		return err
+	}
 	if verb == "cas" {
-		_, err = fmt.Fprintf(rw, "%s %s %d %d %d %d\r\n",
-			verb, item.Key, item.Flags, item.Expiration, len(item.Value), item.casid)
-	} else {
-		_, err = fmt.Fprintf(rw, "%s %s %d %d %d\r\n",
-			verb, item.Key, item.Flags, item.Expiration, len(item.Value))
+		if err := w.WriteByte(byte(' ')); err != nil {
+			return err
+		}
+		if _, err := w.WriteString(strconv.FormatUint(item.casid, 10)); err != nil {
+			return err
+		}
 	}
-	if err != nil {
+	if _, err := w.Write(crlf); err != nil {
 		return err
 	}
-	if _, err = rw.Write(item.Value); err != nil {
+	if _, err = w.Write(item.Value); err != nil {
 		return err
 	}
-	if _, err := rw.Write(crlf); err != nil {
+	if _, err := w.Write(crlf); err != nil {
 		return err
 	}
-	if err := rw.Flush(); err != nil {
+	if err := w.Flush(); err != nil {
 		return err
 	}
 	line, err := rw.ReadSlice('\n')

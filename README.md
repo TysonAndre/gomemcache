@@ -1,5 +1,7 @@
 ## About
 
+[![Build Status](https://travis-ci.org/TysonAndre/gomemcache.svg?branch=master)](https://travis-ci.org/TysonAndre/gomemcache)
+
 This is a text protocol memcache client library for the Go programming language
 (http://golang.org/).
 
